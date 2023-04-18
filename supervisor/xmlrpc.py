@@ -42,6 +42,7 @@ class Faults:
     ALREADY_ADDED = 90
     STILL_RUNNING = 91
     CANT_REREAD = 92
+    WAITING_TO_START = 93
 
 def getFaultDescription(code):
     for faultname in Faults.__dict__:

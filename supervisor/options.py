@@ -922,6 +922,7 @@ class ServerOptions(Options):
         stopsignal = signal_number(get(section, 'stopsignal', 'TERM'))
         stopwaitsecs = integer(get(section, 'stopwaitsecs', 10))
         stopasgroup = boolean(get(section, 'stopasgroup', 'false'))
+        stopnowait = boolean(get(section, 'stopnowait', 'false'))
         killasgroup = boolean(get(section, 'killasgroup', stopasgroup))
         exitcodes = list_of_exitcodes(get(section, 'exitcodes', '0'))
         # see also redirect_stderr check in process_groups_from_parser()
@@ -1057,6 +1058,7 @@ class ServerOptions(Options):
                 stopsignal=stopsignal,
                 stopwaitsecs=stopwaitsecs,
                 stopasgroup=stopasgroup,
+                stopnowait=stopnowait,
                 killasgroup=killasgroup,
                 exitcodes=exitcodes,
                 redirect_stderr=redirect_stderr,
@@ -1876,7 +1878,7 @@ class ProcessConfig(Config):
         'stderr_logfile', 'stderr_capture_maxbytes',
         'stderr_logfile_backups', 'stderr_logfile_maxbytes',
         'stderr_events_enabled', 'stderr_syslog',
-        'stopsignal', 'stopwaitsecs', 'stopasgroup', 'killasgroup',
+        'stopsignal', 'stopwaitsecs', 'stopasgroup', 'killasgroup', 'stopnowait',
         'exitcodes', 'redirect_stderr' ]
     optional_param_names = [ 'environment', 'serverurl' ]
 

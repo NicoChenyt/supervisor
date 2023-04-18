@@ -56,6 +56,8 @@ class Subprocess(object):
     spawnerr = None # error message attached by spawn() if any
     group = None # ProcessGroup instance if process is in the group
 
+    need_restart = False # auto spawn after stopped
+
     def __init__(self, config):
         """Constructor.
 
@@ -206,6 +208,7 @@ class Subprocess(object):
         self.exitstatus = None
         self.system_stop = False
         self.administrative_stop = False
+        self.need_restart = False
 
         self.laststart = time.time()
 
@@ -261,6 +264,11 @@ class Subprocess(object):
         else:
             return self._spawn_as_child(filename, argv)
 
+    def needRestart(self):
+        if self.config.stopnowait:
+            self.config.options.logger.info('set need_restart = true. name: "%s"' % as_string(self.config.name))
+            self.need_restart = True
+
     def _spawn_as_parent(self, pid):
         # Parent
         self.pid = pid
@@ -270,7 +278,7 @@ class Subprocess(object):
         self.spawnerr = None
         self.delay = time.time() + self.config.startsecs
         options.pidhistory[pid] = self
-        return pid
+        return
 
     def _prepare_child_fds(self):
         options = self.config.options
@@ -616,6 +624,10 @@ class Subprocess(object):
         self.config.options.close_parent_pipes(self.pipes)
         self.pipes = {}
         self.dispatchers = {}
+
+        if self.need_restart:
+            self.config.options.logger.info("try restart again")
+            self.spawn()
 
         # if we died before we processed the current event (only happens
         # if we're an event listener), notify the event system that this

@@ -755,6 +755,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
             return template % (name, 'spawn error')
         elif code == xmlrpc.Faults.ABNORMAL_TERMINATION:
             return template % (name, 'abnormal termination')
+        elif code == xmlrpc.Faults.WAITING_TO_START:
+            return '%s: %s' % (name, 'waiting to start')
         elif code == xmlrpc.Faults.SUCCESS:
             return '%s: started' % name
         # assertion
@@ -836,6 +838,39 @@ class DefaultControllerPlugin(ControllerPluginBase):
 
     def _stopresult(self, result):
         return self._signalresult(result, success='stopped')
+
+    def mark_restart(self, arg):
+        names = arg.split()
+        supervisor = self.ctl.get_supervisor()
+
+        if not names:
+            return
+
+        if 'all' in names:
+            supervisor.markRestartAllProcesses()
+        else:
+            for name in names:
+                group_name, process_name = split_namespec(name)
+                if process_name is None:
+                    try:
+                        supervisor.markRestartProcessInGroup(group_name)
+                    except xmlrpclib.Fault as e:
+                        self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
+                        if e.faultCode == xmlrpc.Faults.BAD_NAME:
+                            error = "%s: ERROR (no such group)" % group_name
+                            self.ctl.output(error)
+                        else:
+                            raise
+                else:
+                    try:
+                        supervisor.markRestartForProcess(name)
+                    except xmlrpclib.Fault as e:
+                        error = {'status': e.faultCode,
+                                 'name': process_name,
+                                 'group': group_name,
+                                 'description':e.faultString}
+                        self.ctl.output(self._stopresult(error))
+                        self.ctl.set_exitstatus_from_xmlrpc_fault(error['status'], xmlrpc.Faults.NOT_RUNNING)
 
     def do_stop(self, arg):
         if not self.ctl.upcheck():
@@ -963,6 +998,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
             self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
             self.help_restart()
             return
+
+        self.mark_restart(arg)
 
         self.do_stop(arg)
         self.do_start(arg)

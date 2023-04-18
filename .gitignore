@@ -11,6 +11,7 @@
 .eggs/
 .pytest_cache/
 .tox/
+.idea/
 build/
 docs/.build/
 dist/
