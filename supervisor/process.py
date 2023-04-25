@@ -278,7 +278,7 @@ class Subprocess(object):
         self.spawnerr = None
         self.delay = time.time() + self.config.startsecs
         options.pidhistory[pid] = self
-        return
+        return pid
 
     def _prepare_child_fds(self):
         options = self.config.options
